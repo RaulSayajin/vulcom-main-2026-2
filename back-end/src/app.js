@@ -7,13 +7,10 @@ import logger from 'morgan'
 
 const app = express()
 
-
 app.use(cors({
- origin: process.env.ALLOWED_ORIGINS.split(','),
- credentials: true
+  origin: process.env.ALLOWED_ORIGINS.split(','),
+  // credentials: true
 }))
-
-
 
 // OWASP Top 10:2025 A09 - Falhas nos Logs de Segurança e no Sistema de Alertas:
 // o log HTTP não registra autor e mudanças de privilégios nem gera alertas de abuso.
