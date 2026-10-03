@@ -1,11 +1,18 @@
 import dotenv from 'dotenv'
 dotenv.config() // Carrega as variáveis de ambiente do arquivo .env
-
+import cors from 'cors'
 import express, { json, urlencoded } from 'express'
 import cookieParser from 'cookie-parser'
 import logger from 'morgan'
 
 const app = express()
+
+
+app.use(cors({
+ origin: process.env.ALLOWED_ORIGINS.split(','),
+ credentials: true
+}))
+
 
 // Permite o consumo da API pelo Vite durante o desenvolvimento.
 const allowedOrigins = process.env.ALLOWED_ORIGINS
