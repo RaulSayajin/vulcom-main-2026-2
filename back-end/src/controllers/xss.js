@@ -28,6 +28,8 @@ controller.createComment = async function(req, res) {
     // *** CORREÇÃO DE XSS: sanitização com DOMPurify ***
     // Remove do comentário atributos e elementos executáveis (onerror, <script> etc.)
     // antes de gravá-lo, mantendo apenas o HTML "seguro".
+    // Junto com a CSP do front-end (index.html), forma uma dupla proteção contra XSS:
+    // a CSP impede a execução de scripts injetados e a sanitização impede que sejam armazenados.
     const comment = DOMPurify.sanitize(req.body?.content ?? '')
 
     await prisma.xssComment.create({
