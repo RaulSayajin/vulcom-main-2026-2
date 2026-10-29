@@ -1,14 +1,17 @@
 import prisma from '../database/client.js'
 import jwt from 'jsonwebtoken'
+import { hashPassword, verifyPassword } from '../lib/argon2.js'
 
 const controller = {}     // Objeto vazio
 
 controller.create = async function(req, res) {
   try {
 
+    // *** HASH DE SENHAS: a senha é substituída pelo seu hash Argon2id antes de ser salva
+    if(req.body?.password) req.body.password = await hashPassword(req.body.password)
+
     // OWASP Top 10:2025 A01 - Falha no Controle de Acesso:
     // atribuição em massa permite ao cliente definir campos sensíveis, como is_admin.
-    // OWASP Top 10:2025 A04 - Falhas de Criptografia: password é persistido sem hash.
     await prisma.user.create({ data: req.body })
 
     // HTTP 201: Created
@@ -63,9 +66,11 @@ controller.retrieveOne = async function(req, res) {
 controller.update = async function(req, res) {
   try {
 
+    // *** HASH DE SENHAS: se houver mudança de senha, grava o hash da nova senha
+    if(req.body?.password) req.body.password = await hashPassword(req.body.password)
+
     // OWASP Top 10:2025 A01 - Falha no Controle de Acesso:
     // o cliente pode alterar is_admin e password de qualquer usuário por atribuição em massa.
-    // OWASP Top 10:2025 A04 - Falhas de Criptografia: a nova senha também é gravada sem hash.
     const result = await prisma.user.update({
       where: { id: Number(req.params.id) },
       data: req.body
@@ -129,11 +134,10 @@ controller.login = async function(req, res) {
       // Usuário encontrado, vamos conferir a senha
       // OWASP Top 10:2025 A07 - Falhas de Autenticação:
       // a credencial fixa admin/admin123 ignora a senha cadastrada para esse usuário.
-      // OWASP Top 10:2025 A04 - Falhas de Criptografia:
-      // a comparação direta usa a senha armazenada em texto puro, sem hash adaptativo.
+      // *** HASH DE SENHAS: confere a senha recebida contra o hash Argon2id armazenado
       let passwordIsValid
       if(req.body?.username === 'admin' && req.body?.password === 'admin123') passwordIsValid = true
-      else passwordIsValid = user.password === req.body?.password
+      else passwordIsValid = await verifyPassword(user.password, req.body?.password ?? '')
 
       // Se a senha estiver errada, retorna
       // HTTP 401: Unauthorized
