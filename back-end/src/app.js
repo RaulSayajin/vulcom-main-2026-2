@@ -9,7 +9,7 @@ const app = express()
 
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS.split(','),
-  // credentials: true
+  credentials: true
 }))
 
 // OWASP Top 10:2025 A09 - Falhas nos Logs de Segurança e no Sistema de Alertas:
